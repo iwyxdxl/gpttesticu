@@ -1566,3 +1566,59 @@ textarea {
   min-width: 0;
   text-align: left;
 }
+
+/* Keep the repository visible across every page, with a dedicated mobile row. */
+.nav-links {
+  margin-left: auto;
+}
+.source-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-shrink: 0;
+  padding: 10px 15px;
+  border: 1px solid #347653;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #214d39, #307553);
+  color: #fff;
+  box-shadow: 0 3px 10px #214d391a;
+  font-size: 13px;
+  font-weight: 650;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+.source-link > svg {
+  width: 21px;
+  height: 21px;
+  flex-shrink: 0;
+}
+.source-license {
+  padding: 1px 6px;
+  border: 1px solid #c7e4b54d;
+  border-radius: 5px;
+  background: #ffffff12;
+  color: #e3f3c7;
+  font: 11px/1.6 var(--mono);
+  letter-spacing: .5px;
+}
+.source-arrow {
+  color: #e3f3c7;
+  font-size: 18px;
+  line-height: 1;
+}
+.source-link:hover {
+  background: linear-gradient(135deg, #193f2e, #286746);
+  box-shadow: 0 5px 16px #214d3930;
+  transform: translateY(-1px);
+}
+@media (max-width: 760px) {
+  .nav {
+    flex-wrap: wrap;
+  }
+  .source-link {
+    width: 100%;
+    padding: 11px 15px;
+  }
+}
