@@ -1,0 +1,4 @@
+gpttest.icu {
+	encode gzip
+	reverse_proxy app:8787
+}

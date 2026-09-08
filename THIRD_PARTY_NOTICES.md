@@ -1,0 +1,194 @@
+# 第三方声明
+
+项目根目录 MIT 许可证适用于项目原创代码。第三方资源和 npm 依赖适用各自许可证。
+
+## OpenAI Codex 提示词
+
+- 文件：`server/src/assets/codex-system-prompt.md`。
+- 来源与 SHA-256：[`codex-prompt-source.json`](server/src/assets/codex-prompt-source.json)。
+- Copyright 2025 OpenAI；Apache-2.0。
+- 原始许可证：[`CODEX-LICENSE`](server/src/assets/CODEX-LICENSE)。
+- 原始归属声明：[`CODEX-NOTICE`](server/src/assets/CODEX-NOTICE)。
+- 提示词为未修改的公开快照，MIT 不覆盖该文件。
+
+## npm 依赖
+
+以下清单根据两个 package-lock.json 生成，包含开发及可选依赖。分发依赖或构建产物时，应保留对应依赖要求的许可证和归属声明。双许可证依赖可按 Apache-2.0 条款使用。
+
+| 包 | 版本 | 许可证 |
+| --- | --- | --- |
+| @asamuzakjp/css-color | 5.1.11 | MIT |
+| @asamuzakjp/dom-selector | 7.1.1 | MIT |
+| @asamuzakjp/generational-cache | 1.0.1 | MIT |
+| @asamuzakjp/nwsapi | 2.3.9 | MIT |
+| @babel/code-frame | 7.29.7 | MIT |
+| @babel/compat-data | 7.29.7 | MIT |
+| @babel/core | 7.29.7 | MIT |
+| @babel/generator | 7.29.8 | MIT |
+| @babel/helper-compilation-targets | 7.29.7 | MIT |
+| @babel/helper-globals | 7.29.7 | MIT |
+| @babel/helper-module-imports | 7.29.7 | MIT |
+| @babel/helper-module-transforms | 7.29.7 | MIT |
+| @babel/helper-plugin-utils | 7.29.7 | MIT |
+| @babel/helper-string-parser | 7.29.7 | MIT |
+| @babel/helper-validator-identifier | 7.29.7 | MIT |
+| @babel/helper-validator-option | 7.29.7 | MIT |
+| @babel/helpers | 7.29.7 | MIT |
+| @babel/parser | 7.29.8 | MIT |
+| @babel/plugin-transform-react-jsx-self | 7.29.7 | MIT |
+| @babel/plugin-transform-react-jsx-source | 7.29.7 | MIT |
+| @babel/template | 7.29.7 | MIT |
+| @babel/traverse | 7.29.8 | MIT |
+| @babel/types | 7.29.8 | MIT |
+| @bramus/specificity | 2.4.2 | MIT |
+| @csstools/color-helpers | 6.1.1 | MIT-0 |
+| @csstools/css-calc | 3.3.0 | MIT |
+| @csstools/css-color-parser | 4.2.2 | MIT |
+| @csstools/css-parser-algorithms | 4.0.0 | MIT |
+| @csstools/css-syntax-patches-for-csstree | 1.1.12 | MIT-0 |
+| @csstools/css-tokenizer | 4.0.0 | MIT |
+| @esbuild/aix-ppc64 | 0.28.2 | MIT |
+| @esbuild/android-arm | 0.28.2 | MIT |
+| @esbuild/android-arm64 | 0.28.2 | MIT |
+| @esbuild/android-x64 | 0.28.2 | MIT |
+| @esbuild/darwin-arm64 | 0.28.2 | MIT |
+| @esbuild/darwin-x64 | 0.28.2 | MIT |
+| @esbuild/freebsd-arm64 | 0.28.2 | MIT |
+| @esbuild/freebsd-x64 | 0.28.2 | MIT |
+| @esbuild/linux-arm | 0.28.2 | MIT |
+| @esbuild/linux-arm64 | 0.28.2 | MIT |
+| @esbuild/linux-ia32 | 0.28.2 | MIT |
+| @esbuild/linux-loong64 | 0.28.2 | MIT |
+| @esbuild/linux-mips64el | 0.28.2 | MIT |
+| @esbuild/linux-ppc64 | 0.28.2 | MIT |
+| @esbuild/linux-riscv64 | 0.28.2 | MIT |
+| @esbuild/linux-s390x | 0.28.2 | MIT |
+| @esbuild/linux-x64 | 0.28.2 | MIT |
+| @esbuild/netbsd-arm64 | 0.28.2 | MIT |
+| @esbuild/netbsd-x64 | 0.28.2 | MIT |
+| @esbuild/openbsd-arm64 | 0.28.2 | MIT |
+| @esbuild/openbsd-x64 | 0.28.2 | MIT |
+| @esbuild/openharmony-arm64 | 0.28.2 | MIT |
+| @esbuild/sunos-x64 | 0.28.2 | MIT |
+| @esbuild/win32-arm64 | 0.28.2 | MIT |
+| @esbuild/win32-ia32 | 0.28.2 | MIT |
+| @esbuild/win32-x64 | 0.28.2 | MIT |
+| @exodus/bytes | 1.15.1 | MIT |
+| @hono/node-server | 1.19.17 | MIT |
+| @jridgewell/gen-mapping | 0.3.13 | MIT |
+| @jridgewell/remapping | 2.3.5 | MIT |
+| @jridgewell/resolve-uri | 3.1.2 | MIT |
+| @jridgewell/sourcemap-codec | 1.6.0 | MIT |
+| @jridgewell/trace-mapping | 0.3.31 | MIT |
+| @napi-rs/lzma-linux-x64-gnu | 1.5.1 | MIT |
+| @playwright/test | 1.63.0 | Apache-2.0 |
+| @rolldown/pluginutils | 1.0.0-rc.3 | MIT |
+| @rollup/rollup-android-arm-eabi | 4.63.1 | MIT |
+| @rollup/rollup-android-arm64 | 4.63.1 | MIT |
+| @rollup/rollup-darwin-arm64 | 4.63.1 | MIT |
+| @rollup/rollup-darwin-x64 | 4.63.1 | MIT |
+| @rollup/rollup-freebsd-arm64 | 4.63.1 | MIT |
+| @rollup/rollup-freebsd-x64 | 4.63.1 | MIT |
+| @rollup/rollup-linux-arm-gnueabihf | 4.63.1 | MIT |
+| @rollup/rollup-linux-arm-musleabihf | 4.63.1 | MIT |
+| @rollup/rollup-linux-arm64-gnu | 4.63.1 | MIT |
+| @rollup/rollup-linux-arm64-musl | 4.63.1 | MIT |
+| @rollup/rollup-linux-loong64-gnu | 4.63.1 | MIT |
+| @rollup/rollup-linux-loong64-musl | 4.63.1 | MIT |
+| @rollup/rollup-linux-ppc64-gnu | 4.63.1 | MIT |
+| @rollup/rollup-linux-ppc64-musl | 4.63.1 | MIT |
+| @rollup/rollup-linux-riscv64-gnu | 4.63.1 | MIT |
+| @rollup/rollup-linux-riscv64-musl | 4.63.1 | MIT |
+| @rollup/rollup-linux-s390x-gnu | 4.63.1 | MIT |
+| @rollup/rollup-linux-x64-gnu | 4.63.1 | MIT |
+| @rollup/rollup-linux-x64-musl | 4.63.1 | MIT |
+| @rollup/rollup-openbsd-x64 | 4.63.1 | MIT |
+| @rollup/rollup-openharmony-arm64 | 4.63.1 | MIT |
+| @rollup/rollup-win32-arm64-msvc | 4.63.1 | MIT |
+| @rollup/rollup-win32-ia32-msvc | 4.63.1 | MIT |
+| @rollup/rollup-win32-x64-gnu | 4.63.1 | MIT |
+| @rollup/rollup-win32-x64-msvc | 4.63.1 | MIT |
+| @types/babel__core | 7.20.5 | MIT |
+| @types/babel__generator | 7.27.0 | MIT |
+| @types/babel__template | 7.4.4 | MIT |
+| @types/babel__traverse | 7.28.0 | MIT |
+| @types/css-tree | 3.2.0 | MIT |
+| @types/estree | 1.0.9 | MIT |
+| @types/node | 22.20.1 | MIT |
+| @types/prop-types | 15.7.15 | MIT |
+| @types/react | 18.3.31 | MIT |
+| @types/react-dom | 18.3.7 | MIT |
+| @types/trusted-types | 2.0.7 | MIT |
+| @vitejs/plugin-react | 5.2.0 | MIT |
+| baseline-browser-mapping | 2.11.21 | Apache-2.0 |
+| bidi-js | 1.1.0 | MIT |
+| browserslist | 4.28.9 | MIT |
+| caniuse-lite | 1.0.30001810 | CC-BY-4.0 |
+| convert-source-map | 2.0.0 | MIT |
+| cookie | 1.1.1 | MIT |
+| css-tree | 3.2.1 | MIT |
+| csstype | 3.2.3 | MIT |
+| data-urls | 7.0.0 | MIT |
+| debug | 4.4.3 | MIT |
+| decimal.js | 10.6.0 | MIT |
+| dompurify | 3.4.15 | (MPL-2.0 OR Apache-2.0) |
+| electron-to-chromium | 1.5.423 | ISC |
+| entities | 8.1.0 | BSD-2-Clause |
+| esbuild | 0.28.2 | MIT |
+| escalade | 3.2.0 | MIT |
+| fdir | 6.5.0 | MIT |
+| fsevents | 2.3.3 | MIT |
+| gensync | 1.0.0-beta.2 | MIT |
+| hono | 4.13.7 | MIT |
+| html-encoding-sniffer | 6.0.0 | MIT |
+| is-potential-custom-element-name | 1.0.1 | MIT |
+| isomorphic-dompurify | 3.19.0 | MIT |
+| js-tokens | 4.0.0 | MIT |
+| jsdom | 29.1.1 | MIT |
+| jsesc | 3.1.0 | MIT |
+| json5 | 2.2.3 | MIT |
+| loose-envify | 1.4.0 | MIT |
+| lru-cache | 11.5.2 | BlueOak-1.0.0 |
+| lru-cache | 5.1.1 | ISC |
+| mdn-data | 2.27.1 | CC0-1.0 |
+| ms | 2.1.3 | MIT |
+| nanoid | 3.3.18 | MIT |
+| node-releases | 2.0.54 | MIT |
+| parse5 | 8.0.1 | MIT |
+| picocolors | 1.1.1 | ISC |
+| picomatch | 4.0.7 | MIT |
+| playwright | 1.63.0 | Apache-2.0 |
+| playwright-core | 1.63.0 | Apache-2.0 |
+| postcss | 8.5.28 | MIT |
+| punycode | 2.3.1 | MIT |
+| react | 18.3.1 | MIT |
+| react-dom | 18.3.1 | MIT |
+| react-refresh | 0.18.0 | MIT |
+| react-router | 7.18.3 | MIT |
+| react-router-dom | 7.18.3 | MIT |
+| require-from-string | 2.0.2 | MIT |
+| rollup | 4.63.1 | MIT |
+| saxes | 6.0.0 | ISC |
+| scheduler | 0.23.2 | MIT |
+| semver | 6.3.1 | ISC |
+| set-cookie-parser | 2.7.2 | MIT |
+| source-map-js | 1.2.1 | BSD-3-Clause |
+| symbol-tree | 3.2.4 | MIT |
+| tinyglobby | 0.2.17 | MIT |
+| tldts | 7.4.12 | MIT |
+| tldts-core | 7.4.12 | MIT |
+| tough-cookie | 6.0.2 | BSD-3-Clause |
+| tr46 | 6.0.0 | MIT |
+| tsx | 4.23.13 | MIT |
+| typescript | 5.9.3 | Apache-2.0 |
+| undici | 7.29.1 | MIT |
+| undici-types | 6.21.0 | MIT |
+| update-browserslist-db | 1.3.2 | MIT |
+| vite | 7.3.6 | MIT |
+| w3c-xmlserializer | 5.0.0 | MIT |
+| webidl-conversions | 8.0.1 | BSD-2-Clause |
+| whatwg-mimetype | 5.0.0 | MIT |
+| whatwg-url | 16.0.1 | MIT |
+| xml-name-validator | 5.0.0 | Apache-2.0 |
+| xmlchars | 2.2.0 | MIT |
+| yallist | 3.1.1 | ISC |

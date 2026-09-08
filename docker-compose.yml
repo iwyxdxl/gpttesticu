@@ -1,0 +1,24 @@
+services:
+  app:
+    build: .
+    container_name: gpttest-app
+    ports:
+      - "8787:8787"
+    environment:
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:?请先在 .env 配置管理员密码}
+      - PORT=8787
+      - DB_PATH=/app/data/gpttest.db
+      - TRUST_PROXY=${TRUST_PROXY:-0}
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+
+  # 可选：自动 HTTPS 反代。把域名解析到服务器后，
+  # 取消下方注释，并将 .env 中 TRUST_PROXY 设为 1 后启动
+  # caddy:
+  #   image: caddy:2-alpine
+  #   ports: ["80:80", "443:443"]
+  #   volumes:
+  #     - ./Caddyfile:/etc/caddy/Caddyfile
+  #     - ./caddy_data:/data
+  #   restart: unless-stopped

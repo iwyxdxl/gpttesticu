@@ -1,0 +1,8 @@
+{
+  "source": "https://github.com/openai/codex/blob/963009737fc6e7d45ca5cb37d63107b8be368eda/codex-rs/core/gpt-5.1-codex-max_prompt.md",
+  "commit": "963009737fc6e7d45ca5cb37d63107b8be368eda",
+  "file": "codex-rs/core/gpt-5.1-codex-max_prompt.md",
+  "snapshot_date": "2026-09-08",
+  "sha256": "496fb2f00991f7d24bffd8f6ea4f58540390b99d7cbd1d76693e425879190dce",
+  "scope": "Unmodified, complete public Codex CLI prompt snapshot. Only the prompt is replicated; browser tests do not execute CLI tools or reproduce the CLI runtime."
+}

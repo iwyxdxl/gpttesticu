@@ -1,0 +1,29 @@
+# Dependencies and build output
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Runtime data
+data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+*.log
+
+# Local files and test artifacts
+.DS_Store
+coverage/
+web/test-results/
+web/playwright-report/
+docs/verification/
+temp/
