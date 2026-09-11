@@ -81,6 +81,17 @@ db.exec(`CREATE TABLE IF NOT EXISTS test_feedback (
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
 )`);
+// 作品评论：身份沿用匿名 anon_id 机制，status 支持管理员隐藏。
+db.exec(`CREATE TABLE IF NOT EXISTS comments (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  work_id    INTEGER NOT NULL,
+  anon_id    TEXT NOT NULL,
+  nickname   TEXT NOT NULL DEFAULT '匿名鹈鹕',
+  content    TEXT NOT NULL,
+  status     TEXT NOT NULL DEFAULT 'approved',
+  created_at INTEGER NOT NULL
+)`);
+db.exec(`CREATE INDEX IF NOT EXISTS idx_comments_work ON comments(work_id, status, id DESC)`);
 
 function readAsset(name: string): string {
   return fs.readFileSync(path.join(ASSETS_DIR, name), "utf8");

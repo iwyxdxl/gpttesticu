@@ -4,9 +4,14 @@ import { ErrorText } from "../components/ErrorText";
 import { Modal } from "../components/Modal";
 import { useCallback, useEffect, useState } from "react";
 import { Preview } from "../components/Preview";
-import { adminFetch, adminLogin, type WorkItem } from "../lib/api";
+import {
+  adminFetch,
+  adminLogin,
+  type AdminCommentItem,
+  type WorkItem,
+} from "../lib/api";
 
-type Tab = "overview" | "moderate" | "keywords" | "params" | "reference";
+type Tab = "overview" | "moderate" | "comments" | "keywords" | "params" | "reference";
 
 interface AdminConfig {
   keywords_dumbed: string;
@@ -107,6 +112,13 @@ export default function Admin() {
   } | null>(null);
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
   const [editing, setEditing] = useState<WorkItem | null>(null);
+  // 评论管理
+  const [cmtStatus, setCmtStatus] = useState("");
+  const [cmtPage, setCmtPage] = useState(1);
+  const [cmtData, setCmtData] = useState<{
+    items: AdminCommentItem[];
+    pages: number;
+  } | null>(null);
   // 配置
   const [cfg, setCfg] = useState<AdminConfig | null>(null);
   const [dumbedWords, setDumbedWords] = useState<string[]>([]);
@@ -126,6 +138,15 @@ export default function Admin() {
       .then(setModData)
       .catch((e) => setAdminError(e.message));
   }, [modStatus, modPage]);
+
+  const loadComments = useCallback(() => {
+    const s = cmtStatus ? `&status=${cmtStatus}` : "";
+    adminFetch<{ items: AdminCommentItem[]; pages: number }>(
+      `/api/admin/comments?page=${cmtPage}${s}`,
+    )
+      .then(setCmtData)
+      .catch((e) => setAdminError(e.message));
+  }, [cmtStatus, cmtPage]);
 
   const loadConfig = useCallback(() => {
     adminFetch<AdminConfig>("/api/admin/config")
@@ -147,6 +168,11 @@ export default function Admin() {
     if (!token) return;
     loadModerate();
   }, [token, loadModerate]);
+
+  useEffect(() => {
+    if (!token) return;
+    loadComments();
+  }, [token, loadComments]);
 
   const login = async () => {
     if (loginBusy) return;
@@ -203,6 +229,14 @@ export default function Admin() {
     }).catch((e) => setAdminError(e.message));
     loadModerate();
     loadOverview();
+  };
+
+  const moderateComment = async (id: number, action: string) => {
+    await adminFetch(`/api/admin/comments/${id}/moderate`, {
+      method: "POST",
+      body: JSON.stringify({ action }),
+    }).catch((e) => setAdminError(e.message));
+    loadComments();
   };
 
   const saveConfig = async (patch: Record<string, unknown>) => {
@@ -270,6 +304,7 @@ export default function Admin() {
             [
               ["overview", "📊 概览"],
               ["moderate", "🔍 审核"],
+              ["comments", "💬 评论"],
               ["keywords", "🔤 关键词"],
               ["params", "⌨️ 参数与提示词"],
               ["reference", "🖼 参考样本"],
@@ -328,6 +363,10 @@ export default function Admin() {
           <div className="card stat-card">
             <span className="stat-num">{overview.likes_total ?? 0}</span>
             <span className="stat-name">总点赞数</span>
+          </div>
+          <div className="card stat-card">
+            <span className="stat-num">{overview.comments_total ?? 0}</span>
+            <span className="stat-name">总评论数</span>
           </div>
           <div className="card stat-card wide">
             <span className="stat-name">完整测试 · 用户判断</span>
@@ -480,6 +519,99 @@ export default function Admin() {
                 loadModerate();
               }}
             />
+          )}
+        </div>
+      )}
+
+      {tab === "comments" && (
+        <div className="card">
+          <div className="board-bar">
+            <div className="seg">
+              {[
+                ["", "全部"],
+                ["approved", "显示中"],
+                ["hidden", "已隐藏"],
+              ].map(([s, label]) => (
+                <button
+                  key={s}
+                  className={cmtStatus === s ? "on" : ""}
+                  onClick={() => {
+                    setCmtStatus(s);
+                    setCmtPage(1);
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+          {cmtData?.items.length === 0 && (
+            <p className="muted">这个状态下没有评论。</p>
+          )}
+          <div className="mod-list">
+            {cmtData?.items.map((c) => (
+              <div className="mod-item" key={c.id}>
+                <div className="mod-info">
+                  <strong>
+                    #{c.id} @ {c.nickname}
+                  </strong>
+                  <span className={`verdict-badge ${c.status === "hidden" ? "vb-unknown" : "vb-normal"}`}>
+                    {c.status === "hidden" ? "已隐藏" : "显示中"}
+                  </span>
+                  <span className="muted small">
+                    {c.work_title
+                      ? `来自作品「${c.work_title}」(#${c.work_id}) · `
+                      : `作品 #${c.work_id} · `}
+                    {new Date(c.created_at).toLocaleString("zh-CN")}
+                  </span>
+                  <p className="comment-text">{c.content}</p>
+                  <div className="cta-row">
+                    {c.status === "approved" ? (
+                      <button
+                        className="btn btn-danger btn-sm"
+                        onClick={() => moderateComment(c.id, "hide")}
+                      >
+                        隐藏
+                      </button>
+                    ) : (
+                      <button
+                        className="btn btn-primary btn-sm"
+                        onClick={() => moderateComment(c.id, "restore")}
+                      >
+                        恢复显示
+                      </button>
+                    )}
+                    <button
+                      className="btn btn-danger btn-sm"
+                      onClick={() => moderateComment(c.id, "delete")}
+                    >
+                      删除
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          {cmtData && cmtData.pages > 1 && (
+            <div className="pager">
+              <button
+                className="btn btn-ghost"
+                disabled={cmtPage <= 1}
+                onClick={() => setCmtPage((p) => p - 1)}
+              >
+                ←
+              </button>
+              <span>
+                {cmtPage} / {cmtData.pages}
+              </span>
+              <button
+                className="btn btn-ghost"
+                disabled={cmtPage >= cmtData.pages}
+                onClick={() => setCmtPage((p) => p + 1)}
+              >
+                →
+              </button>
+            </div>
           )}
         </div>
       )}

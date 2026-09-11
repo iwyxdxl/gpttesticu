@@ -146,7 +146,8 @@ publicApi.get("/works", (c) => {
       : "funny_value DESC, created_at DESC, id DESC";
   const items = db
     .prepare(
-      `SELECT id, title, html, model_name, is_gpt6astra, verdict, nickname, funny_value, created_at, source
+      `SELECT id, title, html, model_name, is_gpt6astra, verdict, nickname, funny_value, created_at, source,
+       (SELECT COUNT(*) FROM comments WHERE comments.work_id = works.id AND comments.status='approved') AS comment_count
        FROM works WHERE ${whereSql} ORDER BY ${order} LIMIT ? OFFSET ?`,
     )
     .all(...params, pageSize, (page - 1) * pageSize);
@@ -171,7 +172,8 @@ publicApi.get("/works/models", (c) => {
 publicApi.get("/works/:id", (c) => {
   const row = db
     .prepare(
-      `SELECT id, title, html, model_name, is_gpt6astra, verdict, nickname, funny_value, created_at, source, chat_log, auto_verdict
+      `SELECT id, title, html, model_name, is_gpt6astra, verdict, nickname, funny_value, created_at, source, chat_log, auto_verdict,
+       (SELECT COUNT(*) FROM comments WHERE comments.work_id = works.id AND comments.status='approved') AS comment_count
        FROM works WHERE id = ? AND status = 'approved'`,
     )
     .get(Number(c.req.param("id")));
@@ -299,4 +301,116 @@ publicApi.post("/works/:id/like", async (c) => {
     funny_value: cur?.funny_value ?? 0,
     already_liked: true,
   });
+});
+
+// ---------- 评论（匿名身份与上传/点赞同机制） ----------
+
+const COMMENT_MAX_CHARS = 500;
+const COMMENT_PAGE_SIZE = 20;
+
+function approvedWork(id: number) {
+  return db
+    .prepare(`SELECT id FROM works WHERE id = ? AND status='approved'`)
+    .get(id);
+}
+
+publicApi.get("/works/:id/comments", (c) => {
+  const id = Number(c.req.param("id"));
+  if (!approvedWork(id)) return c.json({ error: "作品不存在或未过审" }, 404);
+  const page = Math.min(
+    100000,
+    Math.max(1, Math.floor(Number(c.req.query("page")) || 1)),
+  );
+  // mine 仅用于标记「这条是不是我发的」，公开接口不返回任何 anon_id
+  const mine = String(c.req.query("mine") || "");
+  const mineId = /^[A-Za-z0-9-]{8,64}$/.test(mine) ? mine : null;
+  const total = (
+    db
+      .prepare(
+        "SELECT COUNT(*) AS n FROM comments WHERE work_id = ? AND status='approved'",
+      )
+      .get(id) as any
+  ).n;
+  const rows = db
+    .prepare(
+      `SELECT id, nickname, content, created_at, anon_id FROM comments
+       WHERE work_id = ? AND status='approved' ORDER BY id DESC LIMIT ? OFFSET ?`,
+    )
+    .all(id, COMMENT_PAGE_SIZE, (page - 1) * COMMENT_PAGE_SIZE) as any[];
+  const items = rows.map(({ anon_id, ...rest }) => ({
+    ...rest,
+    mine: mineId !== null && anon_id === mineId,
+  }));
+  return c.json({
+    items,
+    page,
+    pages: Math.max(1, Math.ceil(total / COMMENT_PAGE_SIZE)),
+    total,
+  });
+});
+
+publicApi.post("/works/:id/comments", async (c) => {
+  if (!rateLimit(`comment:${clientIp(c)}`, 30, 3600_000))
+    return c.json({ error: "评论太频繁了，一小时后再试" }, 429);
+  let body: any;
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: "请求体不合法" }, 400);
+  }
+  const anonId = String(body?.anon_id ?? "");
+  if (!/^[A-Za-z0-9-]{8,64}$/.test(anonId))
+    return c.json({ error: "匿名身份不合法" }, 400);
+  const content = String(body?.content ?? "").trim();
+  if (!content || content.length > COMMENT_MAX_CHARS)
+    return c.json(
+      { error: `评论内容需在 1-${COMMENT_MAX_CHARS} 字之间` },
+      400,
+    );
+  const nickname =
+    String(body?.nickname ?? "")
+      .trim()
+      .slice(0, 30) || "匿名鹈鹕";
+  const id = Number(c.req.param("id"));
+  if (!approvedWork(id)) return c.json({ error: "作品不存在或未过审" }, 404);
+  const now = Date.now();
+  const res = db
+    .prepare(
+      `INSERT INTO comments (work_id, anon_id, nickname, content, status, created_at)
+       VALUES (?, ?, ?, ?, 'approved', ?)`,
+    )
+    .run(id, anonId, nickname, content, now);
+  return c.json({
+    ok: true,
+    id: Number(res.lastInsertRowid),
+    comment: {
+      id: Number(res.lastInsertRowid),
+      nickname,
+      content,
+      created_at: now,
+      mine: true,
+    },
+  });
+});
+
+publicApi.post("/works/:id/comments/:cid/delete", async (c) => {
+  if (!rateLimit(`commentdel:${clientIp(c)}`, 60, 60_000))
+    return c.json({ error: "操作太频繁了" }, 429);
+  let body: any;
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: "请求体不合法" }, 400);
+  }
+  const anonId = String(body?.anon_id ?? "");
+  if (!/^[A-Za-z0-9-]{8,64}$/.test(anonId))
+    return c.json({ error: "匿名身份不合法" }, 400);
+  const res = db
+    .prepare(
+      "DELETE FROM comments WHERE id = ? AND work_id = ? AND anon_id = ?",
+    )
+    .run(Number(c.req.param("cid")), Number(c.req.param("id")), anonId);
+  if (Number(res.changes) === 0)
+    return c.json({ error: "评论不存在" }, 404);
+  return c.json({ ok: true });
 });

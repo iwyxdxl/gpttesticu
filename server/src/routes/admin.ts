@@ -119,6 +119,9 @@ adminApi.get("/overview", (c) => {
   const likesTotal = (
     db.prepare("SELECT COUNT(*) AS n FROM likes").get() as any
   ).n;
+  const commentsTotal = (
+    db.prepare("SELECT COUNT(*) AS n FROM comments").get() as any
+  ).n;
   const topWorks = db
     .prepare(
       `SELECT id, title, model_name, funny_value FROM works WHERE status='approved' ORDER BY funny_value DESC LIMIT 5`,
@@ -135,6 +138,7 @@ adminApi.get("/overview", (c) => {
     verdicts,
     works,
     likes_total: likesTotal,
+    comments_total: commentsTotal,
     top_works: topWorks,
   });
 });
@@ -193,6 +197,62 @@ adminApi.post("/works/:id/moderate", async (c) => {
           .prepare(`UPDATE works SET status=?, updated_at=? WHERE id=?`)
           .run(map[action], now, id);
   if (Number(res.changes) === 0) return c.json({ error: "作品不存在" }, 404);
+  return c.json({ ok: true });
+});
+
+// ---------- 评论管理 ----------
+
+adminApi.get("/comments", (c) => {
+  const status = ["approved", "hidden"].includes(c.req.query("status") || "")
+    ? (c.req.query("status") as string)
+    : "";
+  const page = Math.min(
+    100000,
+    Math.max(1, Math.floor(Number(c.req.query("page")) || 1)),
+  );
+  const pageSize = 20;
+  const whereSql = status ? "WHERE c.status = ?" : "";
+  const params = status ? [status] : [];
+  const total = (
+    db
+      .prepare(`SELECT COUNT(*) AS n FROM comments c ${whereSql}`)
+      .get(...params) as any
+  ).n;
+  const items = db
+    .prepare(
+      `SELECT c.id, c.work_id, w.title AS work_title, c.nickname, c.anon_id, c.content, c.status, c.created_at
+       FROM comments c LEFT JOIN works w ON w.id = c.work_id
+       ${whereSql} ORDER BY c.id DESC LIMIT ? OFFSET ?`,
+    )
+    .all(...params, pageSize, (page - 1) * pageSize);
+  return c.json({
+    items,
+    page,
+    pages: Math.max(1, Math.ceil(total / pageSize)),
+    total,
+  });
+});
+
+adminApi.post("/comments/:id/moderate", async (c) => {
+  let body: any;
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: "请求体不合法" }, 400);
+  }
+  const action = body?.action;
+  const id = Number(c.req.param("id"));
+  let res: { changes: number | bigint };
+  if (action === "delete") {
+    res = db.prepare("DELETE FROM comments WHERE id = ?").run(id);
+  } else {
+    const map: Record<string, string> = { hide: "hidden", restore: "approved" };
+    if (!map[action]) return c.json({ error: "action 不合法" }, 400);
+    res = db
+      .prepare("UPDATE comments SET status = ? WHERE id = ?")
+      .run(map[action], id);
+  }
+  if (Number(res.changes) === 0) return c.json({ error: "评论不存在" }, 404);
   return c.json({ ok: true });
 });
 

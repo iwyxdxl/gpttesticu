@@ -249,6 +249,9 @@ export default function Home() {
                 >
                   🤣 {w.funny_value}
                 </button>
+                <span className="comment-count" title="评论数">
+                  💬 {w.comment_count ?? 0}
+                </span>
                 <Link to={`/work/${w.id}`} className="btn btn-ghost btn-sm">
                   看大图
                 </Link>

@@ -1,4 +1,5 @@
 import { ChatLog } from "../components/ChatLog";
+import { Comments } from "../components/Comments";
 import { ErrorText } from "../components/ErrorText";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -108,6 +109,7 @@ export default function WorkDetail() {
         />
       </div>
       <ChatLog text={work.chat_log} autoVerdict={work.auto_verdict} />
+      {Number(id) > 0 && <Comments workId={Number(id)} />}
       <div className="cta-row center">
         <Link className="btn btn-ghost" to="/">
           ← 回排行榜

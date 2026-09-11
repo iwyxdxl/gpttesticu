@@ -24,6 +24,7 @@ export interface WorkItem {
   chat_log?: string | null;
   auto_verdict?: string | null;
   source: "test" | "custom";
+  comment_count?: number;
 }
 
 export interface WorksPage {
@@ -100,6 +101,63 @@ export const likeWork = (id: number, anon_id: string) =>
     `/api/works/${id}/like`,
     jsonInit({ anon_id }),
   );
+
+// ---------- 评论（匿名身份同点赞机制） ----------
+
+export interface CommentItem {
+  id: number;
+  nickname: string;
+  content: string;
+  created_at: number;
+  mine?: boolean;
+}
+
+export interface CommentsPage {
+  items: CommentItem[];
+  page: number;
+  pages: number;
+  total: number;
+}
+
+export const fetchComments = (
+  workId: number | string,
+  page: number,
+  mineAnonId?: string,
+) => {
+  const u = new URLSearchParams({ page: String(page) });
+  if (mineAnonId) u.set("mine", mineAnonId);
+  return jfetch<CommentsPage>(`/api/works/${workId}/comments?${u}`);
+};
+
+export const postComment = (
+  workId: number | string,
+  body: { anon_id: string; nickname: string; content: string },
+) =>
+  jfetch<{ ok: boolean; id: number; comment: CommentItem }>(
+    `/api/works/${workId}/comments`,
+    jsonInit(body),
+  );
+
+export const deleteMyComment = (
+  workId: number | string,
+  commentId: number,
+  anon_id: string,
+) =>
+  jfetch<{ ok: boolean }>(
+    `/api/works/${workId}/comments/${commentId}/delete`,
+    jsonInit({ anon_id }),
+  );
+
+export interface AdminCommentItem {
+  id: number;
+  work_id: number;
+  work_title: string | null;
+  nickname: string;
+  anon_id: string;
+  content: string;
+  status: "approved" | "hidden";
+  created_at: number;
+}
 
 export interface UploadPayload {
   chat_log?: string | null;
