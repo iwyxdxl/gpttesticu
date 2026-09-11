@@ -4,6 +4,7 @@ import { randomBytes, timingSafeEqual } from "node:crypto";
 import { getCookie, setCookie, deleteCookie } from "hono/cookie";
 import { db, getConfig, setConfig } from "../db.js";
 import { rateLimit, clientIp, sleep } from "../ratelimit.js";
+import { VERDICTS } from "./public.js";
 
 export const adminApi = new Hono();
 
@@ -192,6 +193,66 @@ adminApi.post("/works/:id/moderate", async (c) => {
           .prepare(`UPDATE works SET status=?, updated_at=? WHERE id=?`)
           .run(map[action], now, id);
   if (Number(res.changes) === 0) return c.json({ error: "作品不存在" }, 404);
+  return c.json({ ok: true });
+});
+
+// 管理员修正作品的模型分类与人工判断结果，规则与上传校验保持一致。
+adminApi.put("/works/:id", async (c) => {
+  let body: any;
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: "请求体不合法" }, 400);
+  }
+  const id = Number(c.req.param("id"));
+  const row = db
+    .prepare("SELECT model_name, is_gpt6astra FROM works WHERE id = ?")
+    .get(id) as any;
+  if (!row) return c.json({ error: "作品不存在" }, 404);
+
+  const sets: { col: string; val: string | number }[] = [];
+  if (body?.is_gpt6astra !== undefined || body?.model_name !== undefined) {
+    const isGpt =
+      body?.is_gpt6astra !== undefined
+        ? body.is_gpt6astra === true
+        : row.is_gpt6astra === 1;
+    if (isGpt) {
+      let modelName: string;
+      if (body?.model_name !== undefined) {
+        modelName =
+          String(body.model_name).trim().slice(0, 60) || "gpt6astra";
+        if (!/^gpt[-_ ]?6[-_ ]?astra(?:$|[-_. ])/i.test(modelName))
+          return c.json({ error: "模型名与 gpt6astra 标记不一致" }, 400);
+      } else {
+        // 现有名仍匹配 gpt6astra 才保留，否则回到默认名
+        modelName = /^gpt[-_ ]?6[-_ ]?astra(?:$|[-_. ])/i.test(row.model_name)
+          ? row.model_name
+          : "gpt6astra";
+      }
+      sets.push({ col: "model_name", val: modelName });
+      sets.push({ col: "is_gpt6astra", val: isGpt ? 1 : 0 });
+    } else {
+      const modelName =
+        body?.model_name !== undefined
+          ? String(body.model_name).trim().slice(0, 60)
+          : row.model_name;
+      if (!modelName)
+        return c.json({ error: "非 gpt6astra 请填写实际模型名" }, 400);
+      sets.push({ col: "model_name", val: modelName });
+      sets.push({ col: "is_gpt6astra", val: 0 });
+    }
+  }
+  if (body?.verdict !== undefined) {
+    if (!VERDICTS.includes(body.verdict))
+      return c.json({ error: "判断结果不合法" }, 400);
+    sets.push({ col: "verdict", val: body.verdict });
+  }
+  if (sets.length === 0)
+    return c.json({ error: "没有需要更新的字段" }, 400);
+  const now = Date.now();
+  db.prepare(
+    `UPDATE works SET ${sets.map((s) => `${s.col}=?`).join(", ")}, updated_at=? WHERE id=?`,
+  ).run(...sets.map((s) => s.val), now, id);
   return c.json({ ok: true });
 });
 

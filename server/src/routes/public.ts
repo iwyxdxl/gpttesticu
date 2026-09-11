@@ -5,7 +5,7 @@ import { rateLimit, clientIp } from "../ratelimit.js";
 
 export const publicApi = new Hono();
 
-const VERDICTS = ["dumbed", "normal", "unknown"] as const;
+export const VERDICTS = ["dumbed", "normal", "unknown"] as const;
 type Verdict = (typeof VERDICTS)[number];
 
 function publicConfig() {

@@ -1,6 +1,7 @@
 import { RequestError } from "../lib/errors";
 import { ChatLog } from "../components/ChatLog";
 import { ErrorText } from "../components/ErrorText";
+import { Modal } from "../components/Modal";
 import { useCallback, useEffect, useState } from "react";
 import { Preview } from "../components/Preview";
 import { adminFetch, adminLogin, type WorkItem } from "../lib/api";
@@ -105,6 +106,7 @@ export default function Admin() {
     pages: number;
   } | null>(null);
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
+  const [editing, setEditing] = useState<WorkItem | null>(null);
   // 配置
   const [cfg, setCfg] = useState<AdminConfig | null>(null);
   const [dumbedWords, setDumbedWords] = useState<string[]>([]);
@@ -406,6 +408,12 @@ export default function Admin() {
                     >
                       {previewHtml === w.html ? "收起预览" : "预览"}
                     </button>
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => setEditing(w)}
+                    >
+                      编辑
+                    </button>
                     {modStatus === "pending" && (
                       <>
                         <button
@@ -461,6 +469,16 @@ export default function Admin() {
               html={previewHtml}
               title="审核预览"
               className="preview-md"
+            />
+          )}
+          {editing && (
+            <EditWorkModal
+              work={editing}
+              onClose={() => setEditing(null)}
+              onSaved={() => {
+                setEditing(null);
+                loadModerate();
+              }}
             />
           )}
         </div>
@@ -602,5 +620,127 @@ function ReferenceTab({
         <Preview html={html} title="参考样本预览" className="preview-md" />
       )}
     </div>
+  );
+}
+
+function EditWorkModal({
+  work,
+  onClose,
+  onSaved,
+}: {
+  work: WorkItem;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [isGpt, setIsGpt] = useState(work.is_gpt6astra === 1);
+  const [modelName, setModelName] = useState(work.model_name);
+  const [verdict, setVerdict] = useState(work.verdict ?? "");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  const submit = async () => {
+    setError("");
+    if (!isGpt && !modelName.trim())
+      return setError("非 gpt6astra 请填写实际模型名");
+    if (!verdict) return setError("请选择判断结果");
+    setBusy(true);
+    try {
+      await adminFetch(`/api/admin/works/${work.id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          is_gpt6astra: isGpt,
+          // gpt6astra 时沿用服务端保留/重置逻辑，避免旧模型名卡住正则校验
+          ...(isGpt ? {} : { model_name: modelName.trim() }),
+          verdict,
+        }),
+      });
+      onSaved();
+    } catch (e: any) {
+      setError(e?.message || "保存失败");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Modal
+      label="编辑作品信息"
+      onClose={() => {
+        if (!busy) onClose();
+      }}
+    >
+      <div className="modal-head">
+        <h3>
+          编辑 #{work.id} {work.title}
+        </h3>
+        <button
+          className="icon-btn"
+          aria-label="关闭编辑"
+          disabled={busy}
+          onClick={onClose}
+        >
+          ✕
+        </button>
+      </div>
+      <div className="modal-body">
+        <div className="field-row">
+          <div className="field" role="group" aria-label="模型分类">
+            <span>模型</span>
+            <div className="seg">
+              <button
+                className={isGpt ? "on" : ""}
+                onClick={() => setIsGpt(true)}
+              >
+                gpt6astra
+              </button>
+              <button
+                className={!isGpt ? "on" : ""}
+                onClick={() => {
+                  setIsGpt(false);
+                  if (
+                    /^gpt[-_ ]?6[-_ ]?astra(?:$|[-_. ])/i.test(modelName.trim())
+                  )
+                    setModelName("");
+                }}
+              >
+                其他模型
+              </button>
+            </div>
+          </div>
+          {!isGpt && (
+            <label className="field grow">
+              <span>实际模型名 *</span>
+              <input
+                value={modelName}
+                onChange={(e) => setModelName(e.target.value)}
+                maxLength={60}
+                placeholder="如 claude-opus-4.6"
+              />
+            </label>
+          )}
+        </div>
+        <div className="field" role="group" aria-label="判断结果">
+          <span>判断结果</span>
+          <div className="seg">
+            {[["dumbed", "已降智"], ["normal", "正常未降智"], ["unknown", "无法判断"]].map(([value, label]) => (
+              <button key={value} className={verdict === value ? "on" : ""} aria-pressed={verdict === value} onClick={() => setVerdict(value)}>{label}</button>
+            ))}
+          </div>
+        </div>
+        {error && (
+          <div className="form-error" role="alert">
+            <ErrorText message={error} />
+          </div>
+        )}
+        <div className="modal-actions">
+          <button className="btn btn-ghost" onClick={onClose} disabled={busy}>
+            取消
+          </button>
+          <button className="btn btn-primary" onClick={submit} disabled={busy}>
+            {busy ? "保存中…" : "保存修改"}
+          </button>
+        </div>
+      </div>
+    </Modal>
   );
 }

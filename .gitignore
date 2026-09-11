@@ -27,3 +27,6 @@ web/test-results/
 web/playwright-report/
 docs/verification/
 temp/
+
+# ZCode session artifacts
+.zcode/
