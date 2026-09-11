@@ -74,6 +74,7 @@
 | @esbuild/win32-ia32 | 0.28.2 | MIT |
 | @esbuild/win32-x64 | 0.28.2 | MIT |
 | @exodus/bytes | 1.15.1 | MIT |
+| @fontsource/noto-serif-sc | 5.3.0 | OFL-1.1 |
 | @hono/node-server | 1.19.17 | MIT |
 | @jridgewell/gen-mapping | 0.3.13 | MIT |
 | @jridgewell/remapping | 2.3.5 | MIT |

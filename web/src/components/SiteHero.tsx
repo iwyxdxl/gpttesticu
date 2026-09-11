@@ -34,7 +34,7 @@ export default function SiteHero({ tab }: { tab: "board" | "test" }) {
         <span className="badge">Codex 提示词 · LOW</span>
       </div>
       <h1 className="hero-title">
-        你的 GPT <span className="grad-text">降智</span> 了吗？
+        你的 GPT <span className="grad-text">降智</span>了吗？
       </h1>
       <p className="hero-sub">
         让模型画一只「骑自行车的鹈鹕」——从几段文字，到一幅会动的画，看看你的模型交出了什么作业。
