@@ -1,9 +1,9 @@
 import { useEffect } from "react";
 import { reportVisit } from "./lib/api";
 import { getAnonId } from "./lib/anon";
-import { BrowserRouter, Link, NavLink, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Link, Navigate, NavLink, Route, Routes, useLocation } from "react-router-dom";
 import Home from "./pages/Home";
-import Leaderboard from "./pages/Leaderboard";
+import Test from "./pages/Test";
 import WorkDetail from "./pages/WorkDetail";
 import Admin from "./pages/Admin";
 
@@ -43,11 +43,9 @@ export default function App() {
         </Link>
         <nav className="nav-links" aria-label="主导航">
           <NavLink end to="/">
-            模型检测
+            搞笑排行榜
           </NavLink>
-          <NavLink to="/leaderboard">
-            搞笑排行榜 <span aria-hidden="true">↗</span>
-          </NavLink>
+          <NavLink to="/test">降智检测</NavLink>
         </nav>
         <a
           className="source-link"
@@ -68,7 +66,8 @@ export default function App() {
       <main id="main-content" className="wrap">
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/test" element={<Test />} />
+          <Route path="/leaderboard" element={<Navigate to="/" replace />} />
           <Route path="/work/:id" element={<WorkDetail />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="*" element={<Home />} />

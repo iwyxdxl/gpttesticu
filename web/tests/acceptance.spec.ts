@@ -15,7 +15,7 @@ async function capturePage(page: Page, path: string) {
   await page.setViewportSize(viewport);
 }
 async function connect(page: Page, model = "gpt-6astra-mystery") {
-  await page.goto("/");
+  await page.goto("/test");
   await page.getByLabel("服务端点").fill(relay);
   await page.getByPlaceholder("sk-...").fill(secret);
   await page.getByRole("button", { name: "拉取模型", exact: true }).click();
@@ -110,7 +110,7 @@ for (const [model, verdict] of [
     ).toBeVisible({ timeout: 15000 });
     await expect.poll(() => events).toEqual([{ verdict, ran_full: true }]);
     await page.getByRole("button", { name: "再测一次" }).click();
-    await page.getByRole("link", { name: "搞笑排行榜" }).click();
+    await page.getByRole("link", { name: "🏆 搞笑排行榜" }).click();
     expect(events).toEqual([{ verdict, ran_full: true }]);
   });
 }
@@ -227,14 +227,14 @@ test("unknown decline closes the flow; reset and navigation flush exactly once",
   await expect(page.getByRole("button", { name: "上完整测试" })).toHaveCount(0);
   await page.getByRole("button", { name: "再测一次" }).click();
   await quick(page);
-  await page.getByRole("link", { name: "搞笑排行榜" }).click();
+  await page.getByRole("link", { name: "🏆 搞笑排行榜" }).click();
   await expect.poll(() => events.length).toBe(2);
   expect(events.every((e) => e.ran_full === false)).toBe(true);
 });
 test("model fetch failure supports manual fallback; invalid URLs never send credentials", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/test");
   await page.getByLabel("服务端点").fill("https://user:pass@invalid.test/v1");
   await page.getByPlaceholder("sk-...").fill(secret);
   await page.getByRole("button", { name: "拉取模型", exact: true }).click();
@@ -279,11 +279,11 @@ test("responsive pages, keyboard dialog and safe animated reference", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.goto("/");
+  await page.goto("/test");
   await expect(page.locator("iframe").first()).toBeVisible();
   await page.frameLocator("iframe").first().locator("#scene").waitFor();
   await page.waitForTimeout(250);
-  await capturePage(page, "../docs/verification/home-desktop.png");
+  await capturePage(page, "../docs/verification/test-desktop.png");
   const reference = page.frameLocator("iframe").first();
   await expect(reference.locator("svg#scene")).toBeVisible();
   await expect(reference.locator("script")).toHaveCount(0);
@@ -292,7 +292,7 @@ test("responsive pages, keyboard dialog and safe animated reference", async ({
   );
   for (const width of [390, 320, 768]) {
     await page.setViewportSize({ width, height: 844 });
-    for (const path of ["/", "/leaderboard", "/admin"]) {
+    for (const path of ["/", "/test", "/admin"]) {
       await page.goto(path);
       await expect
         .poll(() =>
@@ -301,7 +301,7 @@ test("responsive pages, keyboard dialog and safe animated reference", async ({
           ),
         )
         .toBe(true);
-      if (path === "/") {
+      if (path === "/test") {
         await page.locator("iframe").first().scrollIntoViewIfNeeded();
         await expect(
           page.frameLocator("iframe").first().locator("svg#scene"),
@@ -326,7 +326,7 @@ test("responsive pages, keyboard dialog and safe animated reference", async ({
         );
     }
   }
-  await page.goto("/leaderboard");
+  await page.goto("/");
   await page.getByRole("button", { name: "上传我的鹈鹕" }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   for (let i = 0; i < 15; i++) {
@@ -501,7 +501,7 @@ test("real pagination, hot/new ordering, nickname search and like failure recove
         ).json()
       ).items[0].id,
     ).toBe(ids[13]);
-    await page.goto("/leaderboard");
+    await page.goto("/");
     await page
       .getByRole("combobox", { name: "筛选模型" })
       .selectOption("pagination-mock");

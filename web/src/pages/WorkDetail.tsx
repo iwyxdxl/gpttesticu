@@ -54,7 +54,7 @@ export default function WorkDetail() {
     return (
       <div className="card error-card">
         <ErrorText message={error} />
-        <Link className="btn btn-ghost" to="/leaderboard">
+        <Link className="btn btn-ghost" to="/">
           ← 回排行榜
         </Link>
       </div>
@@ -109,7 +109,7 @@ export default function WorkDetail() {
       </div>
       <ChatLog text={work.chat_log} autoVerdict={work.auto_verdict} />
       <div className="cta-row center">
-        <Link className="btn btn-ghost" to="/leaderboard">
+        <Link className="btn btn-ghost" to="/">
           ← 回排行榜
         </Link>
       </div>

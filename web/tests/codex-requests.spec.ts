@@ -22,7 +22,7 @@ for (const fallback of [false, true]) {
       }
       if (request.url().includes("/api/")) siteRequests.push(request);
     });
-    await page.goto("/");
+    await page.goto("/test");
     await page.getByLabel("服务端点").fill(relay);
     await page.getByPlaceholder("sk-...").fill("codex-wire-test-key");
     await page.getByRole("button", { name: "拉取模型", exact: true }).click();

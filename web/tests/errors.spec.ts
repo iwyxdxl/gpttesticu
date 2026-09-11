@@ -7,7 +7,7 @@ const cors = {
   "access-control-expose-headers": "x-request-id",
 };
 async function ready(page: Page) {
-  await page.goto("/");
+  await page.goto("/test");
   await page.getByLabel("服务端点").fill(relay);
   await page.getByPlaceholder("sk-...").fill("error-test-key");
   await page
@@ -131,14 +131,14 @@ test("network failures show the original browser exception and the unavailable-r
   await expect(alert).toContainText("TypeError: Failed to fetch");
   await expect(alert).toContainText("浏览器未提供 HTTP 状态码或响应体");
 });
-test("site API non-JSON errors remain readable on the leaderboard", async ({
+test("site API non-JSON errors remain readable on the homepage leaderboard", async ({
   page,
 }) => {
   const raw = "Service unavailable\nreason: maintenance\nrequest_id: site-tail";
   await page.route("**/api/works?*", (r) =>
     r.fulfill({ status: 503, contentType: "text/plain", body: raw }),
   );
-  await page.goto("/leaderboard");
+  await page.goto("/");
   const error = page.getByRole("alert").locator(".request-error-text");
   await expect(error).toContainText("HTTP 503");
   expect(await error.textContent()).toContain(raw);
