@@ -2,7 +2,7 @@ import { RequestError } from "../lib/errors";
 import { ChatLog } from "../components/ChatLog";
 import { ErrorText } from "../components/ErrorText";
 import { Modal } from "../components/Modal";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Preview } from "../components/Preview";
 import {
   adminFetch,
@@ -119,6 +119,9 @@ export default function Admin() {
     items: AdminCommentItem[];
     pages: number;
   } | null>(null);
+  const cmtRequestVersion = useRef(0);
+  const [cmtBusy, setCmtBusy] = useState(false);
+  const [cmtRefresh, setCmtRefresh] = useState(0);
   // 配置
   const [cfg, setCfg] = useState<AdminConfig | null>(null);
   const [dumbedWords, setDumbedWords] = useState<string[]>([]);
@@ -140,12 +143,24 @@ export default function Admin() {
   }, [modStatus, modPage]);
 
   const loadComments = useCallback(() => {
+    const version = ++cmtRequestVersion.current;
+    setCmtData(null);
     const s = cmtStatus ? `&status=${cmtStatus}` : "";
     adminFetch<{ items: AdminCommentItem[]; pages: number }>(
       `/api/admin/comments?page=${cmtPage}${s}`,
     )
-      .then(setCmtData)
-      .catch((e) => setAdminError(e.message));
+      .then((d) => {
+        if (version !== cmtRequestVersion.current) return;
+        // 隐藏/删除末页最后一条后，回到仍然存在的页码。
+        if (cmtPage > d.pages) {
+          setCmtPage(d.pages);
+          return;
+        }
+        setCmtData(d);
+      })
+      .catch((e) => {
+        if (version === cmtRequestVersion.current) setAdminError(e.message);
+      });
   }, [cmtStatus, cmtPage]);
 
   const loadConfig = useCallback(() => {
@@ -172,7 +187,8 @@ export default function Admin() {
   useEffect(() => {
     if (!token) return;
     loadComments();
-  }, [token, loadComments]);
+    return () => { ++cmtRequestVersion.current; };
+  }, [token, loadComments, cmtRefresh]);
 
   const login = async () => {
     if (loginBusy) return;
@@ -232,11 +248,22 @@ export default function Admin() {
   };
 
   const moderateComment = async (id: number, action: string) => {
-    await adminFetch(`/api/admin/comments/${id}/moderate`, {
-      method: "POST",
-      body: JSON.stringify({ action }),
-    }).catch((e) => setAdminError(e.message));
-    loadComments();
+    if (cmtBusy) return;
+    setCmtBusy(true);
+    setAdminError("");
+    try {
+      await adminFetch(`/api/admin/comments/${id}/moderate`, {
+        method: "POST",
+        body: JSON.stringify({ action }),
+      });
+      // 让 effect 使用当前筛选，避免写请求闭包重新加载旧的筛选条件。
+      setCmtRefresh((v) => v + 1);
+      loadOverview();
+    } catch (e: any) {
+      setAdminError(e.message);
+    } finally {
+      setCmtBusy(false);
+    }
   };
 
   const saveConfig = async (patch: Record<string, unknown>) => {
@@ -570,6 +597,7 @@ export default function Admin() {
                       <button
                         className="btn btn-danger btn-sm"
                         onClick={() => moderateComment(c.id, "hide")}
+                        disabled={cmtBusy}
                       >
                         隐藏
                       </button>
@@ -577,6 +605,7 @@ export default function Admin() {
                       <button
                         className="btn btn-primary btn-sm"
                         onClick={() => moderateComment(c.id, "restore")}
+                        disabled={cmtBusy}
                       >
                         恢复显示
                       </button>
@@ -584,6 +613,7 @@ export default function Admin() {
                     <button
                       className="btn btn-danger btn-sm"
                       onClick={() => moderateComment(c.id, "delete")}
+                      disabled={cmtBusy}
                     >
                       删除
                     </button>

@@ -114,6 +114,7 @@ export interface CommentItem {
 
 export interface CommentsPage {
   items: CommentItem[];
+  next_cursor: number | null;
   page: number;
   pages: number;
   total: number;
@@ -123,9 +124,11 @@ export const fetchComments = (
   workId: number | string,
   page: number,
   mineAnonId?: string,
+  before?: number,
 ) => {
   const u = new URLSearchParams({ page: String(page) });
   if (mineAnonId) u.set("mine", mineAnonId);
+  if (before !== undefined) u.set("before", String(before));
   return jfetch<CommentsPage>(`/api/works/${workId}/comments?${u}`);
 };
 

@@ -12,8 +12,7 @@ const MAX_CHARS = 500;
 
 export function Comments({ workId }: { workId: number }) {
   const [items, setItems] = useState<CommentItem[] | null>(null);
-  const [page, setPage] = useState(1);
-  const [pages, setPages] = useState(1);
+  const [nextCursor, setNextCursor] = useState<number | null>(null);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -24,18 +23,25 @@ export function Comments({ workId }: { workId: number }) {
   const [postError, setPostError] = useState("");
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const requestVersion = useRef(0);
+  const pending = loading || loadingMore || busy || deletingId !== null;
 
   useEffect(() => {
     const version = ++requestVersion.current;
     setItems(null);
-    setPage(1);
+    setNextCursor(null);
+    setTotal(0);
+    setContent("");
+    setPostError("");
+    setBusy(false);
+    setDeletingId(null);
+    setLoadingMore(false);
     setLoading(true);
     setError("");
     fetchComments(workId, 1, getAnonId())
       .then((d) => {
         if (version !== requestVersion.current) return;
         setItems(d.items);
-        setPages(d.pages);
+        setNextCursor(d.next_cursor);
         setTotal(d.total);
       })
       .catch((e) => {
@@ -45,32 +51,35 @@ export function Comments({ workId }: { workId: number }) {
       .finally(() => {
         if (version === requestVersion.current) setLoading(false);
       });
+    return () => { ++requestVersion.current; };
   }, [workId]);
 
   const loadMore = async () => {
-    if (loadingMore) return;
+    if (pending || nextCursor === null) return;
+    const version = requestVersion.current;
     setLoadingMore(true);
     setError("");
     try {
-      const next = page + 1;
-      const d = await fetchComments(workId, next, getAnonId());
-      // 追加更早的评论；若期间有新评论插入会跨页重复，按 id 去重
+      const d = await fetchComments(workId, 1, getAnonId(), nextCursor);
+      if (version !== requestVersion.current) return;
+      // 追加更早的评论，保持已加载内容和新发表内容。
       setItems((cur) => {
         const seen = new Set((cur ?? []).map((it) => it.id));
         return [...(cur ?? []), ...d.items.filter((it) => !seen.has(it.id))];
       });
-      setPage(next);
-      setPages(d.pages);
+      setNextCursor(d.next_cursor);
       setTotal(d.total);
     } catch (e: any) {
-      setError(e?.message || "评论加载失败");
+      if (version === requestVersion.current)
+        setError(e?.message || "评论加载失败");
     } finally {
-      setLoadingMore(false);
+      if (version === requestVersion.current) setLoadingMore(false);
     }
   };
 
   const submit = async () => {
-    if (busy) return;
+    if (pending) return;
+    const version = requestVersion.current;
     setPostError("");
     const text = content.trim();
     if (!text) return setPostError("评论内容不能为空");
@@ -84,28 +93,33 @@ export function Comments({ workId }: { workId: number }) {
         nickname: nickname.trim() || "匿名鹈鹕",
         content: text,
       });
+      if (version !== requestVersion.current) return;
       setItems((cur) => [r.comment, ...(cur ?? [])]);
       setTotal((t) => t + 1);
       setContent("");
     } catch (e: any) {
-      setPostError(e?.message || "评论失败，稍后再试");
+      if (version === requestVersion.current)
+        setPostError(e?.message || "评论失败，稍后再试");
     } finally {
-      setBusy(false);
+      if (version === requestVersion.current) setBusy(false);
     }
   };
 
   const remove = async (commentId: number) => {
-    if (deletingId !== null) return;
+    if (pending) return;
+    const version = requestVersion.current;
     setDeletingId(commentId);
     setError("");
     try {
       await deleteMyComment(workId, commentId, getAnonId());
+      if (version !== requestVersion.current) return;
       setItems((cur) => (cur ?? []).filter((it) => it.id !== commentId));
       setTotal((t) => Math.max(0, t - 1));
     } catch (e: any) {
-      setError(`删除未成功：${e.message}`);
+      if (version === requestVersion.current)
+        setError(`删除未成功：${e.message}`);
     } finally {
-      setDeletingId(null);
+      if (version === requestVersion.current) setDeletingId(null);
     }
   };
 
@@ -153,7 +167,7 @@ export function Comments({ workId }: { workId: number }) {
           <button
             className="btn btn-primary btn-sm"
             type="submit"
-            disabled={busy || !content.trim()}
+            disabled={pending || !content.trim()}
           >
             {busy ? "发送中…" : "发表评论"}
           </button>
@@ -179,7 +193,7 @@ export function Comments({ workId }: { workId: number }) {
               {c.mine && (
                 <button
                   className="btn btn-ghost btn-sm comment-del"
-                  disabled={deletingId !== null}
+                  disabled={pending}
                   onClick={() => remove(c.id)}
                 >
                   删除
@@ -190,11 +204,11 @@ export function Comments({ workId }: { workId: number }) {
           </div>
         ))}
       </div>
-      {items && page < pages && (
+      {items && nextCursor !== null && (
         <div className="cta-row center">
           <button
             className="btn btn-ghost btn-sm"
-            disabled={loadingMore}
+            disabled={pending}
             onClick={loadMore}
           >
             {loadingMore ? "加载中…" : "加载更多评论"}

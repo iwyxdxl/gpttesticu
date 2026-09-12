@@ -321,6 +321,12 @@ publicApi.get("/works/:id/comments", (c) => {
     100000,
     Math.max(1, Math.floor(Number(c.req.query("page")) || 1)),
   );
+  // 用最后一条已加载评论的 ID 续接；删除/隐藏前面的评论不会移动边界。
+  // 保留 page 参数供旧客户端使用。
+  const beforeParam = c.req.query("before");
+  const before = beforeParam === undefined ? null : Number(beforeParam);
+  if (before !== null && (!Number.isSafeInteger(before) || before <= 0))
+    return c.json({ error: "评论游标不合法" }, 400);
   // mine 仅用于标记「这条是不是我发的」，公开接口不返回任何 anon_id
   const mine = String(c.req.query("mine") || "");
   const mineId = /^[A-Za-z0-9-]{8,64}$/.test(mine) ? mine : null;
@@ -334,15 +340,22 @@ publicApi.get("/works/:id/comments", (c) => {
   const rows = db
     .prepare(
       `SELECT id, nickname, content, created_at, anon_id FROM comments
-       WHERE work_id = ? AND status='approved' ORDER BY id DESC LIMIT ? OFFSET ?`,
+       WHERE work_id = ? AND status='approved' ${before === null ? "" : "AND id < ?"}
+       ORDER BY id DESC LIMIT ? OFFSET ?`,
     )
-    .all(id, COMMENT_PAGE_SIZE, (page - 1) * COMMENT_PAGE_SIZE) as any[];
-  const items = rows.map(({ anon_id, ...rest }) => ({
+    .all(
+      id,
+      ...(before === null ? [] : [before]),
+      COMMENT_PAGE_SIZE + 1,
+      before === null ? (page - 1) * COMMENT_PAGE_SIZE : 0,
+    ) as any[];
+  const items = rows.slice(0, COMMENT_PAGE_SIZE).map(({ anon_id, ...rest }) => ({
     ...rest,
     mine: mineId !== null && anon_id === mineId,
   }));
   return c.json({
     items,
+    next_cursor: rows.length > COMMENT_PAGE_SIZE ? items.at(-1)!.id : null,
     page,
     pages: Math.max(1, Math.ceil(total / COMMENT_PAGE_SIZE)),
     total,
